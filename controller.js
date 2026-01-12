@@ -23,10 +23,20 @@ const BLOCK_IPS = ["125.160.17.84", "36.86.63.185", "118.97.115.30", "103.111.1.
  * CORE LOGIC 1: Puppeteer Browser Check (CAPTCHAs & WAF)
  */
 async function getBrowserStatus(targetUrl) {
+    // const browser = await puppeteer.launch({
+    //     executablePath: TERMUX_CHROMIUM,
+    //     headless: "new",
+    //     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    // });
     const browser = await puppeteer.launch({
-        executablePath: TERMUX_CHROMIUM,
-        headless: "new",
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        executablePath: '/data/data/com.termux/files/usr/bin/chromium',
+        headless: true, // Termux usually requires headless: true
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox', 
+            '--disable-dev-shm-usage',
+            '--disable-gpu'
+        ]
     });
 
     try {
