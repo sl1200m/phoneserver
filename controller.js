@@ -3,14 +3,14 @@ const axios = require('axios');
 
 // --- CONFIGURATION ---
 const dbConfig = {
-    host: 'your-mysql-host',     // e.g., 'localhost' or an IP
-    user: 'your-username',
-    password: 'your-password',
-    database: 'your_database_name'
+    host: '174.138.22.138',     // e.g., 'localhost' or an IP
+    user: 'dbUser200mWebsite',
+    password: 'ZjdtMhjoj8rczpqEYM8j',
+    database: 'db200mWebsite'
 };
 
 const CHECKER_API = 'http://localhost:3000/check'; // Your Captcha-Checker API
-const WEB_SERVER_URL = 'https://your-web-server.com/api/save-results'; // Where to send data
+const WEB_SERVER_URL = 'https://200m.website/api/receiver.php'; // Where to send data
 const DELAY_MS = 4000; // 4 seconds delay
 
 // Helper function for delay
