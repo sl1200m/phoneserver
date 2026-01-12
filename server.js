@@ -30,12 +30,15 @@ async function getBrowserStatus(targetUrl) {
     // });
     const browser = await puppeteer.launch({
         executablePath: '/data/data/com.termux/files/usr/bin/chromium',
-        headless: true, // Termux usually requires headless: true
+        headless: "new",
         args: [
-            '--no-sandbox', 
+            '--no-sandbox',               // Required for Termux
             '--disable-setuid-sandbox', 
-            '--disable-dev-shm-usage',
-            '--disable-gpu'
+            '--disable-dev-shm-usage',    // Prevents memory crashes on phones
+            '--disable-gpu', 
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process'            // Helps keep memory usage low on mobile
         ]
     });
 
@@ -147,3 +150,4 @@ fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) { console.error(err); process.exit(1); }
     console.log('🚀 Termux Server running on http://localhost:3000');
 });
+
