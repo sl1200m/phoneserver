@@ -29,7 +29,7 @@ async function startAutomation() {
         console.log(`✅ Found ${rows.length} domains to check.`);
 
         for (let i = 0; i < rows.length; i++) {
-            const domain = rows[i].domain_column;
+            const domain = rows[i].domain;
             console.log(`\n[${i + 1}/${rows.length}] Processing: ${domain}`);
 
             try {
