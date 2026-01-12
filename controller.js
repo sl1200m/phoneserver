@@ -25,7 +25,7 @@ async function startAutomation() {
 
         // 1. Fetch domains from your table
         // Change 'domains_table' and 'domain_column' to your actual names
-        const [rows] = await connection.execute('SELECT domain_column FROM domains_table');
+        const [rows] = await connection.execute('SELECT domain FROM moneysites');
         console.log(`✅ Found ${rows.length} domains to check.`);
 
         for (let i = 0; i < rows.length; i++) {
