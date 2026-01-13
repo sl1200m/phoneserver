@@ -115,13 +115,13 @@ async function runAutoTask() {
 
             try {
                 // Perform checks
-                const browserStatus = await getBrowserStatus(targetUrl);
+                //const browserStatus = await getBrowserStatus(targetUrl);
                 const ispStatus = await checkISPBlocking(domain);
 
                 const report = {
                     domain,
                     timestamp: new Date().toISOString(),
-                    ...browserStatus,
+                    //...browserStatus,
                     ...ispStatus,
                     status: (ispStatus.dns_blocked || ispStatus.sni_blocked) ? "Blocked" : "Clean"
                 };
@@ -193,5 +193,6 @@ fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) { console.error(err); process.exit(1); }
     console.log('🚀 Termux Server running on http://localhost:3000');
 });
+
 
 
