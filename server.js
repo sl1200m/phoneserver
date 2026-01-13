@@ -19,6 +19,11 @@ const WEB_SERVER_RECEIVER = 'https://200m.website/api/receiver.php';
 const TERMUX_CHROMIUM = '/data/data/com.termux/files/usr/bin/chromium';
 const BLOCK_IPS = ["125.160.17.84", "36.86.63.185", "118.97.115.30", "103.111.1.1"];
 
+// Set a global timeout and tell axios to ignore self-signed cert errors 
+// (Common when ISPs intercept traffic)
+axios.defaults.timeout = 15000; 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 /**
  * CORE LOGIC 1: Puppeteer Browser Check (CAPTCHAs & WAF)
  */
@@ -89,41 +94,79 @@ async function checkISPBlocking(domain) {
 }
 
 /**
- * AUTOMATION: The Database Loop
+ * AUTOMATION: The Database Loop with Final Notification
  */
 async function runAutoTask() {
     let connection;
+    let successCount = 0;
+    let errorCount = 0;
+
     try {
         console.log("📂 Starting Automation: Connecting to DB...");
         connection = await mysql.createConnection(DB_CONFIG);
         const [rows] = await connection.execute('SELECT domain FROM moneysites');
-        
+        console.log(`✅ Found ${rows.length} domains to check.`);
+
         for (let row of rows) {
             const domain = row.domain;
             const targetUrl = domain.startsWith('http') ? domain : `https://${domain}`;
             
             console.log(`🔍 Checking: ${domain}`);
-            
-            const browserStatus = await getBrowserStatus(targetUrl);
-            const ispStatus = await checkISPBlocking(domain);
 
-            const report = {
-                domain,
-                timestamp: new Date().toISOString(),
-                ...browserStatus,
-                ...ispStatus,
-                status: (ispStatus.dns_blocked || ispStatus.sni_blocked) ? "Blocked" : "Clean"
-            };
+            try {
+                // Perform checks
+                const browserStatus = await getBrowserStatus(targetUrl);
+                const ispStatus = await checkISPBlocking(domain);
 
-            await axios.post(WEB_SERVER_RECEIVER, report);
-            console.log(`✅ Reported: ${report.status}`);
-            
-            await new Promise(r => setTimeout(r, 4000)); // 4s cooldown
+                const report = {
+                    domain,
+                    timestamp: new Date().toISOString(),
+                    ...browserStatus,
+                    ...ispStatus,
+                    status: (ispStatus.dns_blocked || ispStatus.sni_blocked) ? "Blocked" : "Clean"
+                };
+
+                // Send results to Web Server
+                await axios.post(WEB_SERVER_RECEIVER, report);
+                console.log(`✅ Reported ${domain}: ${report.status}`);
+                successCount++;
+
+            } catch (itemError) {
+                // If one domain fails, log it and move to the next
+                console.error(`❌ Error checking ${domain}:`, itemError.message);
+                errorCount++;
+                
+                // Optional: Notify web server of the failure specifically
+                await axios.post(WEB_SERVER_RECEIVER, { 
+                    domain, 
+                    status: "Error", 
+                    error: itemError.message 
+                }).catch(() => {}); 
+            }
+
+            // Always wait 4s cooldown before the next domain, even if the check failed
+            await new Promise(r => setTimeout(r, 4000)); 
         }
-    } catch (error) {
-        console.error("Critical Loop Error:", error.message);
+
+        // --- FINAL NOTIFICATION ---
+        const finalNote = {
+            note: "Automation task completed successfully",
+            total_checked: rows.length,
+            success: successCount,
+            failed: errorCount,
+            timestamp: new Date().toISOString()
+        };
+
+        console.log("\n✨ All domains finished. Sending final report...");
+        await axios.post(WEB_SERVER_RECEIVER, finalNote);
+
+    } catch (criticalError) {
+        console.error("🚨 Critical Database/Network Error:", criticalError.message);
     } finally {
-        if (connection) await connection.end();
+        if (connection) {
+            await connection.end();
+            console.log("📂 DB Connection closed.");
+        }
     }
 }
 
@@ -150,4 +193,5 @@ fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) { console.error(err); process.exit(1); }
     console.log('🚀 Termux Server running on http://localhost:3000');
 });
+
 
