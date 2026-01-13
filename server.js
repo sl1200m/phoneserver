@@ -21,8 +21,8 @@ const BLOCK_IPS = ["125.160.17.84", "36.86.63.185", "118.97.115.30", "103.111.1.
 
 // Set a global timeout and tell axios to ignore self-signed cert errors 
 // (Common when ISPs intercept traffic)
-//axios.defaults.timeout = 15000; 
-//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+axios.defaults.timeout = 15000; 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 /**
  * CORE LOGIC 1: Puppeteer Browser Check (CAPTCHAs & WAF)
@@ -193,6 +193,7 @@ fastify.listen({ port: 3000, host: '0.0.0.0' }, (err) => {
     if (err) { console.error(err); process.exit(1); }
     console.log('🚀 Termux Server running on http://localhost:3000');
 });
+
 
 
 
